@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Board - 5-Day MVP Live Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #334155;
+      --bg-card-hover: #3b4d66;
+      --border-color: #475569;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-green: #34d399;
+      --accent-yellow: #fbbf24;
+      --accent-red: #f87171;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .badge-mvp {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background-color: var(--bg-card-hover); }
+
+    .board-header {
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .board-info h1 { font-size: 1.5rem; }
+    .board-info p { font-size: 0.875rem; color: var(--text-muted); }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .search-input {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      width: 220px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent-blue); }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+      align-items: start;
+    }
+
+    .column {
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      max-height: 80vh;
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .column-title {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge-count {
+      background-color: var(--bg-card);
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      min-height: 120px;
+      padding: 0.25rem;
+      border-radius: 6px;
+    }
+
+    .card-list.drag-over {
+      background-color: rgba(56, 189, 248, 0.08);
+      outline: 2px dashed var(--accent-blue);
+    }
+
+    .task-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.85rem;
+      cursor: grab;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .task-card:hover {
+      background-color: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .task-card.dragging {
+      opacity: 0.35;
+    }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .task-card-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+    .btn-delete:hover { color: var(--accent-red); }
+
+    .task-card-desc {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .task-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.25rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.75rem;
+    }
+
+    .badge-priority {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+    .priority-Urgent { background: rgba(248, 113, 113, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .priority-High { background: rgba(251, 191, 36, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+    .priority-Medium { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .priority-Low { background: rgba(52, 211, 153, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+
+    .card-meta { color: var(--text-muted); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 480px;
+      padding: 1.5rem;
+    }
+    .modal-title { font-size: 1.25rem; margin-bottom: 1.25rem; font-weight: 700; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent-blue); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+        <line x1="15" y1="3" x2="15" y2="21"/>
+      </svg>
+      <span>Project Board</span>
+      <span class="badge-mvp">5-Day Scope</span>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <button class="btn btn-secondary" onclick="addNewBoard()">+ New Board</button>
+      <button class="btn btn-primary" onclick="openModal('taskModal')">+ Add Task</button>
+    </div>
+  </header>
+
+  <div class="board-header">
+    <div class="board-info">
+      <h1 id="boardTitle">ALTA Builder - Team Task Management</h1>
+      <p id="boardDesc">5-Day Core MVP: Boards, Tasks, Kanban Columns, Priority & Due Dates</p>
+    </div>
+    <div class="controls-row">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search tasks..." oninput="renderBoard()">
+      <select id="priorityFilter" class="search-input" style="width: 130px;" onchange="renderBoard()">
+        <option value="All">All Priority</option>
+        <option value="Urgent">Urgent</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="board-grid" id="boardGrid">
+    <!-- Rendered dynamically -->
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay" id="taskModal" onclick="closeModal('taskModal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h2 class="modal-title">Add New Task</h2>
+      <form onsubmit="handleAddTask(event)">
+        <div class="form-group">
+          <label>Task Title *</label>
+          <input type="text" id="taskTitle" class="form-control" required placeholder="e.g. Design responsive UI">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="taskDesc" rows="3" class="form-control" placeholder="What needs to be done?"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Column</label>
+            <select id="taskColumn" class="form-control">
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="In Review">In Review</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="taskPriority" class="form-control">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Assignee</label>
+            <input type="text" id="taskAssignee" class="form-control" placeholder="Krishna">
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" id="taskDueDate" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('taskModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const COLUMNS = ['To Do', 'In Progress', 'In Review', 'Done'];
+
+    let tasks = JSON.parse(localStorage.getItem('preview_tasks')) || [
+      {
+        id: 't-1',
+        title: 'Project Architecture & Setup',
+        desc: 'Define 5-day scope, create Express backend & React UI',
+        column: 'Done',
+        priority: 'High',
+        assignee: 'Krishna',
+        dueDate: '2026-11-18'
+      },
+      {
+        id: 't-2',
+        title: 'Task & Board CRUD Endpoints',
+        desc: 'Build REST APIs to create, read, update, and delete cards',
+        column: 'Done',
+        priority: 'Urgent',
+        assignee: 'Krishna',
+        dueDate: '2026-11-19'
+      },
+      {
+        id: 't-3',
+        title: 'Kanban Drag & Drop Board UI',
+        desc: 'Visual columns with drag and drop status transitions',
+        column: 'In Progress',
+        priority: 'Urgent',
+        assignee: 'Krishna',
+        dueDate: '2026-11-20'
+      },
+      {
+        id: 't-4',
+        title: 'Filters & Final Testing',
+        desc: 'Search bar, priority filters, and GitHub push',
+        column: 'To Do',
+        priority: 'Medium',
+        assignee: 'Krishna',
+        dueDate: '2026-11-21'
+      }
+    ];
+
+    function saveTasks() {
+      localStorage.setItem('preview_tasks', JSON.stringify(tasks));
+    }
+
+    function renderBoard() {
+      const grid = document.getElementById('boardGrid');
+      grid.innerHTML = '';
+
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const priority = document.getElementById('priorityFilter').value;
+
+      const filtered = tasks.filter(t => {
+        const matchesQuery = t.title.toLowerCase().includes(query) ||
+          (t.desc && t.desc.toLowerCase().includes(query)) ||
+          (t.assignee && t.assignee.toLowerCase().includes(query));
+        const matchesPriority = priority === 'All' || t.priority === priority;
+        return matchesQuery && matchesPriority;
+      });
+
+      COLUMNS.forEach(col => {
+        const colTasks = filtered.filter(t => t.column === col);
+
+        const colEl = document.createElement('div');
+        colEl.className = 'column';
+        colEl.innerHTML = `
+          <div class="column-header">
+            <span class="column-title">
+              ${col}
+              <span class="badge-count">${colTasks.length}</span>
+            </span>
+            <button class="btn-delete" title="Add to this column" onclick="openAddTaskForColumn('${col}')">+</button>
+          </div>
+          <div class="card-list" id="list-${col.replace(/\s+/g, '')}"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event, '${col}')">
+          </div>
+        `;
+
+        const listEl = colEl.querySelector('.card-list');
+
+        if (colTasks.length === 0) {
+          listEl.innerHTML = `<div style="text-align:center; padding: 2rem 0; color: var(--text-muted); font-size: 0.85rem;">No tasks here</div>`;
+        } else {
+          colTasks.forEach(t => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'task-card';
+            cardEl.draggable = true;
+            cardEl.ondragstart = (e) => handleDragStart(e, t.id);
+            cardEl.ondragend = (e) => e.target.classList.remove('dragging');
+
+            cardEl.innerHTML = `
+              <div class="task-card-header">
+                <span class="task-card-title">${escapeHtml(t.title)}</span>
+                <button class="btn-delete" title="Delete task" onclick="deleteTask('${t.id}')">✕</button>
+              </div>
+              ${t.desc ? `<p class="task-card-desc">${escapeHtml(t.desc)}</p>` : ''}
+              <div class="task-card-footer">
+                <span class="badge-priority priority-${t.priority}">${t.priority}</span>
+                <span class="card-meta">
+                  ${t.assignee ? `👤 ${escapeHtml(t.assignee)}` : ''}
+                  ${t.dueDate ? ` 📅 ${t.dueDate}` : ''}
+                </span>
+              </div>
+            `;
+            listEl.appendChild(cardEl);
+          });
+        }
+
+        grid.appendChild(colEl);
+      });
+    }
+
+    // Drag and drop mechanics
+    function handleDragStart(e, id) {
+      e.dataTransfer.setData('text/plain', id);
+      setTimeout(() => e.target.classList.add('dragging'), 0);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, column) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.column = column;
+        saveTasks();
+        renderBoard();
+      }
+    }
+
+    function handleAddTask(e) {
+      e.preventDefault();
+      const title = document.getElementById('taskTitle').value;
+      const desc = document.getElementById('taskDesc').value;
+      const column = document.getElementById('taskColumn').value;
+      const priority = document.getElementById('taskPriority').value;
+      const assignee = document.getElementById('taskAssignee').value || 'Unassigned';
+      const dueDate = document.getElementById('taskDueDate').value;
+
+      tasks.push({
+        id: 't-' + Date.now(),
+        title,
+        desc,
+        column,
+        priority,
+        assignee,
+        dueDate
+      });
+
+      saveTasks();
+      closeModal('taskModal');
+      renderBoard();
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDesc').value = '';
+    }
+
+    function deleteTask(id) {
+      if (confirm('Delete this task?')) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        renderBoard();
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function openAddTaskForColumn(col) {
+      document.getElementById('taskColumn').value = col;
+      openModal('taskModal');
+    }
+
+    function addNewBoard() {
+      const name = prompt('Enter new board name:');
+      if (name) {
+        document.getElementById('boardTitle').innerText = name;
+        tasks = [];
+        saveTasks();
+        renderBoard();
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    // Initialize board on page load
+    renderBoard();
+  </script>
+</body>
+</html>
